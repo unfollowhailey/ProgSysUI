@@ -1,6 +1,8 @@
 package com.securephone.server;
 
 import com.securephone.server.database.DatabaseManager;
+import com.securephone.server.network.PacketRouter;
+import com.securephone.server.network.SocketManager;
 import com.securephone.server.udp.AudioServer;
 import com.securephone.server.udp.VideoServer;
 
@@ -11,8 +13,18 @@ public class MainServer {
         
         try {
             // Initialiser la base de données
-            DatabaseManager dbManager = DatabaseManager.getInstance();
-            System.out.println("[MAIN] Base de données initialisée");
+            try {
+                DatabaseManager dbManager = DatabaseManager.getInstance();
+                System.out.println("[MAIN] Base de données initialisée");
+            } catch (Exception e) {
+                System.out.println("[MAIN] Base de données indisponible, mode sans DB");
+            }
+
+            // Démarrer le serveur TCP chat
+            PacketRouter router = new PacketRouter();
+            SocketManager socketManager = new SocketManager(router);
+            socketManager.start();
+            System.out.println("[MAIN] Serveur chat TCP démarré sur le port 8081");
             
             // Démarrer le serveur UDP Audio
             AudioServer audioServer = new AudioServer();
@@ -22,11 +34,11 @@ public class MainServer {
             // Démarrer le serveur UDP Vidéo
             VideoServer videoServer = new VideoServer();
             videoServer.start();
-            System.out.println("[MAIN] Serveur Vidéo UDP démarré sur le port 50001");
+            System.out.println("[MAIN] Serveur Vidéo UDP démarré sur le port 50020");
             
             System.out.println("\n✅ Serveur SecurePhone prêt !");
             System.out.println("API REST: http://localhost:8080/securephone/api/");
-            System.out.println("WebSocket: ws://localhost:8080/securephone/chat");
+            System.out.println("Chat TCP: localhost:8081");
             System.out.println("\nAppuyez sur Ctrl+C pour arrêter...");
             
             // Garder le programme actif

@@ -1,61 +1,70 @@
 package com.securephone.client.models;
 
 public class UserSession {
+	private String sessionId;
+	private int userId;
+	private String username;
+	private String status;
+	private long loginTime;
 
-    private String userId;
-    private String username;
-    private boolean connected;
-    private AudioDevice audioDevice;
+	public UserSession() {
+		this.status = "offline";
+	}
 
-    public UserSession() {
-        this.connected = false;
-    }
+	public UserSession(String sessionId, int userId, String username) {
+		this.sessionId = sessionId;
+		this.userId = userId;
+		this.username = username;
+		this.status = "online";
+		this.loginTime = System.currentTimeMillis();
+	}
 
-    public UserSession(String userId, String username) {
-        this.userId = userId;
-        this.username = username;
-        this.connected = false;
-    }
+	public String getSessionId() {
+		return sessionId;
+	}
 
-    public String getUserId() {
-        return userId;
-    }
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
+	public int getUserId() {
+		return userId;
+	}
 
-    public String getUsername() {
-        return username;
-    }
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public boolean isConnected() {
-        return connected;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public void setConnected(boolean connected) {
-        this.connected = connected;
-    }
+	public String getStatus() {
+		return status;
+	}
 
-    public AudioDevice getAudioDevice() {
-        return audioDevice;
-    }
+	public void setStatus(String status) {
+		this.status = status;
+	}
 
-    public void setAudioDevice(AudioDevice audioDevice) {
-        this.audioDevice = audioDevice;
-    }
+	public long getLoginTime() {
+		return loginTime;
+	}
 
-    @Override
-    public String toString() {
-        return "UserSession{"
-                + "userId='" + userId + '\''
-                + ", username='" + username + '\''
-                + ", connected=" + connected
-                + ", audioDevice=" + (audioDevice != null ? audioDevice.getName() : "none")
-                + '}';
-    }
+	public void setLoginTime(long loginTime) {
+		this.loginTime = loginTime;
+	}
+
+	public boolean isLoggedIn() {
+		return sessionId != null && !sessionId.isEmpty();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("UserSession{userId=%d, username='%s', status='%s'}", userId, username, status);
+	}
 }

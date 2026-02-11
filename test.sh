@@ -4,7 +4,8 @@
 
 set -e
 
-PROJECT_ROOT="/opt/lampp/htdocs/SecurePhone"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$SCRIPT_DIR"
 CLIENT_DIR="$PROJECT_ROOT/client"
 LOG_FILE="/tmp/securephone_build.log"
 

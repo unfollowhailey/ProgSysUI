@@ -59,12 +59,10 @@ public class UserDAO {
     }
     
     public List<User> findContacts(int userId) throws SQLException {
-        String sql = """
-            SELECT u.* FROM users u
-            JOIN contacts c ON u.id = c.contact_id
-            WHERE c.user_id = ?
-            ORDER BY u.username
-            """;
+        String sql = "SELECT u.* FROM users u "
+            + "JOIN contacts c ON u.id = c.contact_id "
+            + "WHERE c.user_id = ? "
+            + "ORDER BY u.username";
         
         List<User> contacts = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

@@ -1,8 +1,8 @@
 package com.securephone.client.utils;
 
 import javax.sound.sampled.*;
-import java.io.File;
-import java.io.IOException;
+import javazoom.jl.player.Player;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,17 +28,27 @@ import java.util.Map;
 public class SoundPlayer {
     
     // ========== CHEMINS DES SONS ==========
-    private static final String SOUND_DIR = "client/resources/sounds/";
+    private static final String SOUND_DIR;
+    
+    static {
+        // Déterminer le chemin absolu vers les ressources
+        String userDir = System.getProperty("user.dir");
+        if (userDir.endsWith("client")) {
+            SOUND_DIR = "resources/sounds/";
+        } else {
+            SOUND_DIR = "client/resources/sounds/";
+        }
+    }
     
     public enum SoundType {
-        MESSAGE_RECEIVED("message_received.wav"),
-        MESSAGE_SENT("message_sent.wav"),
-        CALL_INCOMING("call_incoming.wav"),
-        CALL_CONNECTED("call_connected.wav"),
-        CALL_ENDED("call_ended.wav"),
-        ERROR("error.wav"),
-        BUTTON_CLICK("button_click.wav"),
-        NOTIFICATION("notification.wav");
+        MESSAGE_RECEIVED("message_received.mp3"),
+        MESSAGE_SENT("message_sent.mp3"),
+        CALL_INCOMING("call_incoming.mp3"),
+        CALL_CONNECTED("call_connected.mp3"),
+        CALL_ENDED("call_ended.mp3"),
+        ERROR("error.mp3"),
+        BUTTON_CLICK("button_click.mp3"),
+        NOTIFICATION("notification.mp3");
         
         private final String filename;
         
@@ -58,6 +68,7 @@ public class SoundPlayer {
     private boolean soundEnabled = true;
     private float masterVolume = 0.8f; // Volume global (0.0 à 1.0)
     private Map<SoundType, Clip> soundCache = new HashMap<>();
+    private Player currentPlayer; // Pour lecture MP3 en cours
     
     // ========== CONSTRUCTEUR PRIVÉ ==========
     private SoundPlayer() {
@@ -85,41 +96,47 @@ public class SoundPlayer {
             return;
         }
         
+        // Jouer le son dans un thread séparé pour ne pas bloquer l'UI
+        new Thread(() -> {
+            try {
+                playMP3(soundType);
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la lecture du son " + soundType + ": " + e.getMessage());
+            }
+        }).start();
+    }
+    
+    /**
+     * Joue un fichier MP3
+     */
+    private void playMP3(SoundType soundType) {
         try {
-            Clip clip = soundCache.get(soundType);
+            String filepath = SOUND_DIR + soundType.getFilename();
+            File soundFile = new File(filepath);
             
-            if (clip == null) {
-                // Son pas en cache, le charger
-                clip = loadSound(soundType);
-                if (clip == null) {
-                    System.err.println("Impossible de charger le son: " + soundType);
-                    return;
-                }
+            if (!soundFile.exists()) {
+                System.err.println("Fichier son introuvable: " + filepath);
+                return;
             }
             
-            // Variable final pour utilisation dans le thread
-            final Clip finalClip = clip;
+            FileInputStream fis = new FileInputStream(soundFile);
+            BufferedInputStream bis = new BufferedInputStream(fis);
             
-            // Jouer le son dans un thread séparé pour ne pas bloquer l'UI
-            new Thread(() -> {
-                try {
-                    // Si le son est déjà en cours, le redémarrer
-                    if (finalClip.isRunning()) {
-                        finalClip.stop();
-                    }
-                    finalClip.setFramePosition(0);
-                    
-                    // Appliquer le volume
-                    setClipVolume(finalClip, masterVolume);
-                    
-                    finalClip.start();
-                } catch (Exception e) {
-                    System.err.println("Erreur lors de la lecture du son: " + e.getMessage());
-                }
-            }).start();
+            // Arrêter le son précédent si en cours
+            if (currentPlayer != null) {
+                currentPlayer.close();
+            }
+            
+            currentPlayer = new Player(bis);
+            currentPlayer.play();
+            
+            // Nettoyer les ressources
+            currentPlayer.close();
+            bis.close();
+            fis.close();
             
         } catch (Exception e) {
-            System.err.println("Erreur SoundPlayer: " + e.getMessage());
+            System.err.println("Erreur lecture MP3: " + e.getMessage());
         }
     }
     
@@ -158,10 +175,9 @@ public class SoundPlayer {
      * Arrête tous les sons en cours
      */
     public void stopAllSounds() {
-        for (Clip clip : soundCache.values()) {
-            if (clip != null && clip.isRunning()) {
-                clip.stop();
-            }
+        if (currentPlayer != null) {
+            currentPlayer.close();
+            currentPlayer = null;
         }
     }
     
@@ -170,84 +186,29 @@ public class SoundPlayer {
      */
     public void dispose() {
         stopAllSounds();
-        for (Clip clip : soundCache.values()) {
-            if (clip != null) {
-                clip.close();
-            }
-        }
         soundCache.clear();
     }
     
     // ========== MÉTHODES PRIVÉES ==========
     
     /**
-     * Précharge tous les sons en mémoire
+     * Précharge tous les sons en mémoire (vérifie leur présence)
      */
     private void preloadSounds() {
-        System.out.println("Préchargement des sons...");
+        System.out.println("Vérification des fichiers sons...");
         for (SoundType type : SoundType.values()) {
-            Clip clip = loadSound(type);
-            if (clip != null) {
-                soundCache.put(type, clip);
-                System.out.println("  ✓ " + type.name() + " chargé");
-            } else {
-                System.out.println("  ✗ " + type.name() + " introuvable (sera ignoré)");
-            }
-        }
-    }
-    
-    /**
-     * Charge un fichier son
-     */
-    private Clip loadSound(SoundType soundType) {
-        try {
-            String filepath = SOUND_DIR + soundType.getFilename();
+            String filepath = SOUND_DIR + type.getFilename();
             File soundFile = new File(filepath);
-            
-            if (!soundFile.exists()) {
-                // Fichier n'existe pas encore, retourner null silencieusement
-                // (utile pendant le développement avant d'avoir tous les sons)
-                return null;
+            if (soundFile.exists()) {
+                System.out.println("  ✓ " + type.name() + " trouvé");
+            } else {
+                System.out.println("  ✗ " + type.name() + " introuvable: " + filepath);
             }
-            
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            
-            return clip;
-            
-        } catch (UnsupportedAudioFileException e) {
-            System.err.println("Format audio non supporté: " + soundType.getFilename());
-        } catch (IOException e) {
-            System.err.println("Erreur IO lors du chargement: " + soundType.getFilename());
-        } catch (LineUnavailableException e) {
-            System.err.println("Ligne audio indisponible: " + soundType.getFilename());
         }
-        
-        return null;
     }
     
-    /**
-     * Applique le volume à un clip
-     */
-    private void setClipVolume(Clip clip, float volume) {
-        try {
-            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-            
-            // Conversion du volume linéaire (0.0-1.0) en décibels
-            // Formule: dB = 20 * log10(volume)
-            float dB = (float) (Math.log(volume) / Math.log(10.0) * 20.0);
-            
-            // S'assurer que le volume est dans les limites du contrôle
-            float min = gainControl.getMinimum();
-            float max = gainControl.getMaximum();
-            dB = Math.max(min, Math.min(max, dB));
-            
-            gainControl.setValue(dB);
-        } catch (IllegalArgumentException e) {
-            // Le contrôle de volume n'est pas disponible, ignorer
-        }
-    }
+    // Note: loadSound et setClipVolume ne sont plus utilisés avec MP3
+    // Le contrôle du volume pour MP3 nécessiterait une bibliothèque supplémentaire
     
     // ========== MÉTHODES DE COMMODITÉ ==========
     

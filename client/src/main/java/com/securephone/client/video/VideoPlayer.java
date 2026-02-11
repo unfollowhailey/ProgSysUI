@@ -1,46 +1,41 @@
 package com.securephone.client.video;
 
-/**
- * Video player stub. Reads frames from a VideoBuffer; no rendering provided.
- * Integrate with a UI component or native renderer later.
- */
-public class VideoPlayer {
+import javax.swing.JPanel;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 
-    private final VideoBuffer buffer;
-    private volatile boolean running = false;
-    private Thread playThread;
+public class VideoPlayer extends JPanel {
 
-    public VideoPlayer(VideoBuffer buffer) {
-        this.buffer = buffer;
+    private BufferedImage currentFrame;
+
+    public VideoPlayer() {
+        setBackground(Color.BLACK);
     }
 
-    public void start() {
-        if (running) {
+    public void setFrame(BufferedImage frame) {
+        this.currentFrame = frame;
+        repaint();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (currentFrame == null) {
             return;
         }
-        running = true;
-        playThread = new Thread(() -> {
-            while (running) {
-                try {
-                    byte[] frame = buffer.poll(200);
-                    if (frame != null) {
-                        // TODO: deliver frame to a renderer
-                    }
-                } catch (InterruptedException ignored) {
-                }
-            }
-        }, "VideoPlayer-Thread");
-        playThread.setDaemon(true);
-        playThread.start();
-    }
 
-    public void stop() {
-        running = false;
-        if (playThread != null) {
-            try {
-                playThread.join(100);
-            } catch (InterruptedException ignored) {
-            }
-        }
+        int panelWidth = getWidth();
+        int panelHeight = getHeight();
+        int imgWidth = currentFrame.getWidth();
+        int imgHeight = currentFrame.getHeight();
+
+        double scale = Math.min((double) panelWidth / imgWidth, (double) panelHeight / imgHeight);
+        int drawWidth = (int) (imgWidth * scale);
+        int drawHeight = (int) (imgHeight * scale);
+        int x = (panelWidth - drawWidth) / 2;
+        int y = (panelHeight - drawHeight) / 2;
+
+        g.drawImage(currentFrame, x, y, drawWidth, drawHeight, null);
     }
 }

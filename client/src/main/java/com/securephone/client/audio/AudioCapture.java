@@ -1,67 +1,90 @@
 package com.securephone.client.audio;
 
-import java.util.Objects;
-
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
 
-/**
- * Captures audio from the default microphone and pushes frames into an
- * AudioBuffer. This is a simple, dependency-free implementation suitable for
- * local testing.
- */
 public class AudioCapture {
 
-    private final AudioFormat format;
-    private TargetDataLine line;
-    private final AudioBuffer buffer;
-    private volatile boolean running = false;
-    private Thread captureThread;
+	public interface AudioFrameListener {
+		void onAudioFrame(byte[] data, int length);
+	}
 
-    public AudioCapture(AudioBuffer buffer) {
-        this.format = new AudioFormat(48000f, 16, 1, true, false);
-        this.buffer = Objects.requireNonNull(buffer);
-    }
+	private static final float SAMPLE_RATE = 48000f;
+	private static final int SAMPLE_SIZE = 16;
+	private static final int CHANNELS = 1;
+	private static final boolean SIGNED = true;
+	private static final boolean LITTLE_ENDIAN = false;
 
-    public void start() throws LineUnavailableException {
-        if (running) {
-            return;
-        }
-        DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-        line = (TargetDataLine) AudioSystem.getLine(info);
-        line.open(format);
-        line.start();
-        running = true;
+	private static final int FRAME_SAMPLES = 960;
 
-        captureThread = new Thread(() -> {
-            byte[] buf = new byte[320]; // 10ms @ 48kHz 16-bit mono -> 960 bytes; keep small frames
-            while (running) {
-                int read = line.read(buf, 0, buf.length);
-                if (read > 0) {
-                    byte[] frame = new byte[read];
-                    System.arraycopy(buf, 0, frame, 0, read);
-                    buffer.push(frame);
-                }
-            }
-        }, "AudioCapture-Thread");
-        captureThread.setDaemon(true);
-        captureThread.start();
-    }
+	private TargetDataLine line;
+	private Thread captureThread;
+	private volatile boolean running;
+	private final AudioBuffer buffer;
 
-    public void stop() {
-        running = false;
-        if (line != null) {
-            line.stop();
-            line.close();
-        }
-        if (captureThread != null) {
-            try {
-                captureThread.join(200);
-            } catch (InterruptedException ignored) {
-            }
-        }
-    }
+	public AudioCapture() {
+		this.buffer = null;
+	}
+
+	public AudioCapture(AudioBuffer buffer) {
+		this.buffer = buffer;
+	}
+
+	public AudioFormat getFormat() {
+		return new AudioFormat(SAMPLE_RATE, SAMPLE_SIZE, CHANNELS, SIGNED, LITTLE_ENDIAN);
+	}
+
+	public void start() throws Exception {
+		start((data, length) -> {
+			if (buffer != null) {
+				buffer.push(data);
+			}
+		});
+	}
+
+	public void start(AudioFrameListener listener) throws Exception {
+		if (running) {
+			return;
+		}
+
+		AudioFormat format = getFormat();
+		DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+		line = (TargetDataLine) AudioSystem.getLine(info);
+		line.open(format);
+		line.start();
+
+		running = true;
+		captureThread = new Thread(() -> captureLoop(listener), "AudioCaptureThread");
+		captureThread.setDaemon(true);
+		captureThread.start();
+	}
+
+	private void captureLoop(AudioFrameListener listener) {
+		int frameBytes = FRAME_SAMPLES * (SAMPLE_SIZE / 8) * CHANNELS;
+		byte[] buffer = new byte[frameBytes];
+
+		while (running) {
+			int read = line.read(buffer, 0, buffer.length);
+			if (read > 0 && listener != null) {
+				byte[] frame = new byte[read];
+				System.arraycopy(buffer, 0, frame, 0, read);
+				listener.onAudioFrame(frame, read);
+			}
+		}
+	}
+
+	public void stop() {
+		running = false;
+		if (line != null) {
+			line.stop();
+			line.close();
+			line = null;
+		}
+	}
+
+	public boolean isRunning() {
+		return running;
+	}
 }

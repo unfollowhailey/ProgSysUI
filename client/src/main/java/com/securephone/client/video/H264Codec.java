@@ -1,29 +1,27 @@
 package com.securephone.client.video;
 
-/**
- * Placeholder H264 codec stub. Pass-through implementation for Tflow. Replace
- * with native binding or library for real encoding/decoding.
- */
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 public class H264Codec {
 
-    public H264Codec() {
-    }
-
-    public byte[] encode(byte[] rawFrame) {
-        if (rawFrame == null) {
+    public byte[] encode(BufferedImage image) throws IOException {
+        if (image == null) {
             return new byte[0];
         }
-        byte[] out = new byte[rawFrame.length];
-        System.arraycopy(rawFrame, 0, out, 0, rawFrame.length);
-        return out;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpg", out);
+        return out.toByteArray();
     }
 
-    public byte[] decode(byte[] encoded) {
-        if (encoded == null) {
-            return new byte[0];
+    public BufferedImage decode(byte[] data) throws IOException {
+        if (data == null || data.length == 0) {
+            return null;
         }
-        byte[] out = new byte[encoded.length];
-        System.arraycopy(encoded, 0, out, 0, encoded.length);
-        return out;
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        return ImageIO.read(in);
     }
 }

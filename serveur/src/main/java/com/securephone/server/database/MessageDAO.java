@@ -14,11 +14,9 @@ public class MessageDAO {
     }
     
     public boolean saveMessage(Message message) throws SQLException {
-        String sql = """
-            INSERT INTO messages 
-            (sender_id, receiver_id, room_id, message_type, content, encrypted)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """;
+        String sql = "INSERT INTO messages "
+            + "(sender_id, receiver_id, room_id, message_type, content, encrypted) "
+            + "VALUES (?, ?, ?, ?, ?, ?)";
         
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, message.getSenderId());
@@ -33,13 +31,11 @@ public class MessageDAO {
     }
     
     public List<Message> getConversation(int user1Id, int user2Id, int limit) throws SQLException {
-        String sql = """
-            SELECT * FROM messages 
-            WHERE (sender_id = ? AND receiver_id = ?) 
-               OR (sender_id = ? AND receiver_id = ?)
-            ORDER BY timestamp DESC
-            LIMIT ?
-            """;
+        String sql = "SELECT * FROM messages "
+            + "WHERE (sender_id = ? AND receiver_id = ?) "
+            + "OR (sender_id = ? AND receiver_id = ?) "
+            + "ORDER BY timestamp DESC "
+            + "LIMIT ?";
         
         List<Message> messages = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

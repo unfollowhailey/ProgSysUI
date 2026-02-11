@@ -1,0 +1,109 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "compile-client",
+			"type": "shell",
+			"command": "cd client && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-client",
+			"type": "shell",
+			"command": "cd client && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-server",
+			"type": "shell",
+			"command": "cd serveur && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "compile-client",
+			"type": "shell",
+			"command": "cd client && mvn -q -DskipTests clean compile",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

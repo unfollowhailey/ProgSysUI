@@ -1,1 +1,0 @@
-# SecurePhone - Communication sécurisée

@@ -7,14 +7,11 @@ import java.util.UUID;
 public class SessionManager {
 
     private static final Map<String, Session> sessions = new HashMap<>();
-
     public static class Session {
-
-        public int userId;
-        public String username;
-        public long createdAt;
+        public final int userId;
+        public final String username;
+        public final long createdAt;
         public long lastActivity;
-
         Session(int userId, String username) {
             this.userId = userId;
             this.username = username;

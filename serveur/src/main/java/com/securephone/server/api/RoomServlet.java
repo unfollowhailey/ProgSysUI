@@ -1,19 +1,16 @@
 package com.securephone.server.api;
 
-import java.io.IOException;
-import java.sql.Statement;
-
+import com.securephone.server.database.DatabaseManager;
+import com.securephone.server.security.SessionManager;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import java.io.IOException;
+import java.sql.Statement;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import com.securephone.server.database.DatabaseManager;
-import com.securephone.server.security.SessionManager;
 
 @WebServlet("/api/rooms/*")
 public class RoomServlet extends HttpServlet {
@@ -79,13 +76,10 @@ public class RoomServlet extends HttpServlet {
         }
 
         // Récupérer les salles de l'utilisateur
-        String sql = """
-            SELECT r.* FROM rooms r
-            JOIN room_members rm ON r.id = rm.room_id
-            WHERE rm.user_id = ?
-            ORDER BY r.created_at DESC
-            """;
-
+        String sql = "SELECT r.* FROM rooms r "
+            + "JOIN room_members rm ON r.id = rm.room_id "
+            + "WHERE rm.user_id = ? "
+            + "ORDER BY r.created_at DESC";
         try (var stmt = dbManager.getConnection().prepareStatement(sql)) {
             stmt.setInt(1, session.userId);
             var rs = stmt.executeQuery();
@@ -225,14 +219,11 @@ public class RoomServlet extends HttpServlet {
         int roomId = Integer.parseInt(req.getParameter("room_id"));
 
         // Récupérer les membres
-        String sql = """
-            SELECT u.id, u.username, u.status, rm.is_admin, rm.joined_at
-            FROM room_members rm
-            JOIN users u ON rm.user_id = u.id
-            WHERE rm.room_id = ?
-            ORDER BY rm.joined_at
-            """;
-
+        String sql = "SELECT u.id, u.username, u.status, rm.is_admin, rm.joined_at "
+            + "FROM room_members rm "
+            + "JOIN users u ON rm.user_id = u.id "
+            + "WHERE rm.room_id = ? "
+            + "ORDER BY rm.joined_at";
         try (var stmt = dbManager.getConnection().prepareStatement(sql)) {
             stmt.setInt(1, roomId);
             var rs = stmt.executeQuery();

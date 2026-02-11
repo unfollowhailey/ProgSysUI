@@ -36,8 +36,13 @@ public class Simple2FA {
     public static boolean verifyCode(String username, String inputCode) {
         TwoFACode twoFACode = codes.get(username);
         if (twoFACode == null || twoFACode.isExpired()) {
+            codes.remove(username);
             return false;
         }
-        return twoFACode.code.equals(inputCode);
+        boolean valid = twoFACode.code.equals(inputCode);
+        if (valid) {
+            codes.remove(username);
+        }
+        return valid;
     }
 }

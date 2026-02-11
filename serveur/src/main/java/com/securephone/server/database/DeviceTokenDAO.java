@@ -11,13 +11,11 @@ public class DeviceTokenDAO {
     }
     
     public boolean saveToken(int userId, String deviceToken, String platform) throws SQLException {
-        String sql = """
-            INSERT INTO device_tokens (user_id, device_token, platform) 
-            VALUES (?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                last_used = NOW(),
-                active = TRUE
-            """;
+        String sql = "INSERT INTO device_tokens (user_id, device_token, platform) "
+            + "VALUES (?, ?, ?) "
+            + "ON DUPLICATE KEY UPDATE "
+            + "last_used = NOW(), "
+            + "active = TRUE";
         
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, userId);
@@ -28,12 +26,10 @@ public class DeviceTokenDAO {
     }
     
     public String getDeviceToken(int userId) throws SQLException {
-        String sql = """
-            SELECT device_token FROM device_tokens 
-            WHERE user_id = ? AND active = TRUE 
-            ORDER BY last_used DESC 
-            LIMIT 1
-            """;
+        String sql = "SELECT device_token FROM device_tokens "
+            + "WHERE user_id = ? AND active = TRUE "
+            + "ORDER BY last_used DESC "
+            + "LIMIT 1";
         
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, userId);

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SecurePhone Server</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { font-family: Arial, sans-serif; background:#0b1020; color:#e6e6f0; margin:0; }
+    header { padding:24px; background:#141b34; border-bottom:1px solid #222a44; }
+    main { padding:24px; max-width:900px; margin:0 auto; }
+    .card { background:#11172e; border:1px solid #1f2a4a; border-radius:12px; padding:16px; margin:16px 0; }
+    code { background:#0c132a; padding:2px 6px; border-radius:6px; }
+    a { color:#7cc0ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SecurePhone — Interface serveur</h1>
+    <p>Statut et rappel des services actifs</p>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Services</h2>
+      <ul>
+        <li>Chat TCP : <code>localhost:8081</code></li>
+        <li>Audio UDP : <code>localhost:50000</code></li>
+        <li>Vidéo UDP : <code>localhost:50020</code></li>
+      </ul>
+      <p>Le serveur peut tourner sans base de données (mode dégradé).</p>
+    </div>
+    <div class="card">
+      <h2>API REST</h2>
+      <p>Les servlets sont exposées via le contexte <code>/securephone</code>.</p>
+      <p>Exemples :</p>
+      <ul>
+        <li><code>/securephone/api/auth/login</code></li>
+        <li><code>/securephone/api/rooms</code></li>
+      </ul>
+      <p>Déploiement via un conteneur (Tomcat/Jetty).</p>
+    </div>
+    <div class="card">
+      <h2>Documentation</h2>
+      <ul>
+        <li><a href="/securephone/api">API</a> (si déployée)</li>
+        <li>Voir le fichier <code>run.md</code> à la racine du projet</li>
+      </ul>
+    </div>
+  </main>
+</body>
+</html>

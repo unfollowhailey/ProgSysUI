@@ -23,3 +23,4 @@ Projet S3 - Systèmes et Réseaux
 
 ## Documentation
 - Voir `MiammiamProgSYS.docx` pour les spécifications détaillées
+- Voir `run.md` pour lancer serveur + client
