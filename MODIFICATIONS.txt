@@ -1,0 +1,169 @@
+===============================================
+MODIFICATIONS SECUREPHONE - CLIENT & SERVEUR
+===============================================
+Date: 12 février 2026
+Objectif: Corriger la connexion réseau entre serveur et client
+
+===============================================
+1. MODIFICATIONS CLIENT - pom.xml
+===============================================
+
+Changement: JLayer Dependency
+-----------
+AVANT:
+    <dependency>
+        <groupId>javazoom</groupId>
+        <artifactId>jlayer</artifactId>
+        <version>1.0.1</version>
+        <scope>system</scope>
+        <systemPath>${project.basedir}/lib/jlayer-1.0.1.jar</systemPath>
+    </dependency>
+
+APRÈS:
+    <dependency>
+        <groupId>javazoom</groupId>
+        <artifactId>jlayer</artifactId>
+        <version>1.0.1</version>
+    </dependency>
+
+Raison: System-scoped dependencies ne sont pas incluses dans le classpath exec.
+        Maven Central Repository est plus fiable.
+
+
+Changement: Exec Maven Plugin Configuration
+-----------
+AVANT:
+    <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+            <mainClass>com.securephone.client.SecurePhoneApp</mainClass>
+        </configuration>
+    </plugin>
+
+APRÈS:
+    <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+            <mainClass>com.securephone.client.SecurePhoneApp</mainClass>
+            <includeProjectDependencies>true</includeProjectDependencies>
+            <includePluginDependencies>true</includePluginDependencies>
+        </configuration>
+    </plugin>
+
+Raison: Garantir que toutes les dépendances sont incluses au lancement.
+
+
+===============================================
+2. MODIFICATIONS CLIENT - config.properties
+===============================================
+
+Port Serveur
+-----------
+AVANT: server.port=8080
+APRÈS: server.port=8000
+
+Raison: Port 8080 était bloqué/indisponible, changé à 8000.
+
+
+===============================================
+3. MODIFICATIONS CLIENT - ConnectionManager.java
+===============================================
+
+Chemin du fichier config
+-----------
+Fichier: client/src/main/java/com/securephone/client/network/ConnectionManager.java
+Ligne: ~335
+
+AVANT:
+    try (FileInputStream fis = new FileInputStream("client/resources/config.properties")) {
+
+APRÈS:
+    try (FileInputStream fis = new FileInputStream("resources/config.properties")) {
+
+Raison: CECI EST LE BUG PRINCIPAL !
+        Quand on lance depuis le répertoire "client/", le chemin "client/resources/..."
+        n'existe pas. Changé à chemin relatif correct "resources/..."
+        
+Impact: CRITIQUE - Sans cette correction, la config n'était pas chargée,
+        le client utilisait les valeurs par défaut (localhost) au lieu de 192.168.43.37.
+
+
+===============================================
+4. MODIFICATIONS SERVEUR - config.properties
+===============================================
+
+Fichier: serveur/src/main/java/com/securephone/resources/config.properties
+
+Port Serveur
+-----------
+AVANT: server.port=8080
+APRÈS: server.port=8000
+
+Raison: Cohérence avec le port client.
+
+
+Host Serveur
+-----------
+AVANT: server.host=192.168.43.37
+APRÈS: server.host=0.0.0.0
+
+Raison: Écouter sur TOUTES les interfaces réseau (0.0.0.0) au lieu d'une IP spécifique.
+        Permet au serveur d'être accessible via n'importe quelle IP du réseau.
+
+
+WebSocket Host
+-----------
+AVANT: (non configuré)
+APRÈS: websocket.host=0.0.0.0
+
+Raison: WebSocket écoute maintenant sur toutes les interfaces.
+
+
+===============================================
+RÉSUMÉ DES CORRECTIONS
+===============================================
+
+1. ✅ JLayer - Maven Central Repository au lieu de system scope
+2. ✅ Port - Changé 8080 → 8000 (serveur + client)
+3. ✅ Serveur bind - 0.0.0.0 pour écouter sur toutes les interfaces
+4. ✅ Config client - Chemin du fichier CORRIGÉ (CAUSE PRINCIPALE DU BUG)
+
+===============================================
+RÉSULTATS
+===============================================
+
+AVANT les modifications:
+❌ Port 8000 : Connection refused
+❌ Port 8081 : succeeded
+❌ Client reçoit : "Config manquante, valeurs par defaut utilisees"
+❌ Client essaie de se connecter à : localhost:8081 (au lieu de 192.168.43.37:8081)
+❌ Erreur : Connection refused
+
+APRÈS les modifications:
+✅ Port 8000 : succeeded
+✅ Port 8081 : succeeded
+✅ Client charge correctement la config depuis resources/config.properties
+✅ Client se connecte à : 192.168.43.37:8081
+✅ Serveur et client communiquent correctement en réseau
+
+===============================================
+LANCEMENT FINAL
+===============================================
+
+Terminal 1 (PC Serveur - 192.168.43.37):
+    cd serveur
+    mvn clean compile
+    mvn exec:java -Dexec.mainClass="com.securephone.server.MainServer"
+
+Terminal 2 (PC Client):
+    cd client
+    mvn clean compile
+    mvn exec:java -Dexec.mainClass="com.securephone.client.SecurePhoneApp"
+
+Les deux doivent être sur le même réseau WiFi (point d'accès).
+
+===============================================
